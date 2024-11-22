@@ -27,34 +27,10 @@ class _ToDoAppState extends State<ToDoApp> {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         brightness: Brightness.light,
-        textTheme: TextTheme(
-          bodyMedium: TextStyle(fontSize: 16, color: Colors.black),
-          titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-            elevation: 5,
-            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-          ),
-        ),
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         primarySwatch: Colors.blueGrey,
-        textTheme: TextTheme(
-          bodyMedium: TextStyle(fontSize: 16, color: Colors.white70),
-          titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blueGrey,
-            foregroundColor: Colors.white,
-            elevation: 5,
-            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-          ),
-        ),
       ),
       home: ToDoListPage(onToggleTheme: _toggleTheme),
     );

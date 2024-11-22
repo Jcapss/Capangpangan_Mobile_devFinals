@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AddTaskScreen extends StatefulWidget {
-  final Function(String) onAddTask;
+  final Function(String, String) onAddTask;
 
   AddTaskScreen({required this.onAddTask});
 
@@ -11,17 +11,17 @@ class AddTaskScreen extends StatefulWidget {
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
   final TextEditingController _taskController = TextEditingController();
+  String _selectedPriority = 'Medium';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add New Task', style: Theme.of(context).textTheme.titleLarge),
+        title: Text('Add New Task'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: _taskController,
@@ -31,15 +31,31 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
             ),
             SizedBox(height: 20),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: () {
-                  widget.onAddTask(_taskController.text);
-                  Navigator.of(context).pop();
-                },
-                child: Text('Add Task'),
+            DropdownButtonFormField<String>(
+              value: _selectedPriority,
+              items: ['High', 'Medium', 'Low']
+                  .map((priority) => DropdownMenuItem(
+                        value: priority,
+                        child: Text(priority),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedPriority = value!;
+                });
+              },
+              decoration: InputDecoration(
+                labelText: 'Priority Level',
+                border: OutlineInputBorder(),
               ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                widget.onAddTask(_taskController.text, _selectedPriority);
+                Navigator.of(context).pop();
+              },
+              child: Text('Add Task'),
             ),
           ],
         ),

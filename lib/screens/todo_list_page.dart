@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'add_task_screen.dart';
 import 'settings_screen.dart';
 
+class Task {
+  String description;
+  String priority;
+  bool isCompleted;
+
+  Task(this.description, this.priority, {this.isCompleted = false});
+}
+
 class ToDoListPage extends StatefulWidget {
   final Function(bool) onToggleTheme;
 
@@ -12,19 +20,34 @@ class ToDoListPage extends StatefulWidget {
 }
 
 class _ToDoListPageState extends State<ToDoListPage> {
-  final List<String> _tasks = [];
+  final List<Task> _tasks = [];
 
-  void _addTask(String task) {
+  void _addTask(String description, String priority) {
     setState(() {
-      _tasks.add(task);
+      _tasks.add(Task(description, priority));
+      _sortTasksByPriority();
     });
+  }
+
+  void _editTask(int index, String newDescription, String newPriority) {
+    setState(() {
+      _tasks[index].description = newDescription;
+      _tasks[index].priority = newPriority;
+      _sortTasksByPriority();
+    });
+  }
+
+  void _sortTasksByPriority() {
+    const priorityOrder = {'High': 0, 'Medium': 1, 'Low': 2};
+    _tasks.sort((a, b) =>
+        priorityOrder[a.priority]!.compareTo(priorityOrder[b.priority]!));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('To-Do List', style: Theme.of(context).textTheme.titleLarge),
+        title: Text('To-Do List'),
         actions: [
           IconButton(
             icon: Icon(Icons.settings),
@@ -32,7 +55,8 @@ class _ToDoListPageState extends State<ToDoListPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => SettingsScreen(onToggleTheme: widget.onToggleTheme),
+                  builder: (context) =>
+                      SettingsScreen(onToggleTheme: widget.onToggleTheme),
                 ),
               );
             },
@@ -42,7 +66,6 @@ class _ToDoListPageState extends State<ToDoListPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _tasks.isEmpty
@@ -50,28 +73,45 @@ class _ToDoListPageState extends State<ToDoListPage> {
                   : ListView.builder(
                       itemCount: _tasks.length,
                       itemBuilder: (context, index) {
+                        final task = _tasks[index];
                         return Card(
                           margin: EdgeInsets.symmetric(vertical: 8),
                           child: ListTile(
                             leading: Checkbox(
-                              value: false,
+                              value: task.isCompleted,
                               onChanged: (bool? value) {
-                                // Handle task completion
+                                setState(() {
+                                  task.isCompleted = value!;
+                                });
                               },
                             ),
                             title: Text(
-                              _tasks[index],
+                              task.description,
                               style: TextStyle(
-                                decoration: false ? TextDecoration.lineThrough : null,
+                                decoration: task.isCompleted
+                                    ? TextDecoration.lineThrough
+                                    : null,
                               ),
                             ),
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                setState(() {
-                                  _tasks.removeAt(index);
-                                });
-                              },
+                            subtitle: Text('Priority: ${task.priority}'),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.edit, color: Colors.blue),
+                                  onPressed: () {
+                                    _showEditTaskDialog(context, task, index);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      _tasks.removeAt(index);
+                                    });
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -79,24 +119,76 @@ class _ToDoListPageState extends State<ToDoListPage> {
                     ),
             ),
             SizedBox(height: 10),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AddTaskScreen(onAddTask: _addTask),
-                    ),
-                  );
-                },
-                icon: Icon(Icons.add),
-                label: Text('Add Task'),
-              ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddTaskScreen(onAddTask: _addTask),
+                  ),
+                );
+              },
+              icon: Icon(Icons.add),
+              label: Text('Add Task'),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showEditTaskDialog(BuildContext context, Task task, int index) {
+    final TextEditingController descriptionController =
+        TextEditingController(text: task.description);
+    String selectedPriority = task.priority;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Edit Task'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(labelText: 'Description'),
+              ),
+              SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: selectedPriority,
+                items: ['High', 'Medium', 'Low']
+                    .map((priority) => DropdownMenuItem(
+                          value: priority,
+                          child: Text(priority),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  selectedPriority = value!;
+                },
+                decoration: InputDecoration(labelText: 'Priority'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _editTask(
+                  index,
+                  descriptionController.text,
+                  selectedPriority,
+                );
+                Navigator.pop(context);
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
